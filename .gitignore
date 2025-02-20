@@ -1,0 +1,25 @@
+# Home Assistant test files
+.HA_VERSION
+.storage
+home-assistant.log
+home-assistant_v2.db
+__pycache__/
+
+# Environment files
+.env
+.venv
+venv/
+
+# IDE files
+.vscode/
+.idea/
+*.code-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
