@@ -6,6 +6,7 @@ This integration allows you to control and monitor your Webasto Next charging st
 
 - Home Assistant installed and running
 - Webasto Next charging station on the same network
+- Webasto Next configured for Modbus TCP connection
 - The IP address of your Webasto Next charger
 
 ## Installation 🔧
@@ -42,7 +43,7 @@ This integration allows you to control and monitor your Webasto Next charging st
 ## Controls 🎮
 
 - **Current Control Slider**: Adjust charging current from 4A to 16A
-- **On/Off Toggle**: Quick switch between off (4A) and charging (>5A)
+- **On/Off Toggle**: Quick switch between off (4A) and charging (>=5A)
 - **Start/Stop Scripts**: Control charging sessions
 
 ## Sensors 📊

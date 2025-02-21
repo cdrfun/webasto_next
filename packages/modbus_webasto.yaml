@@ -299,7 +299,7 @@ input_number:
     unit_of_measurement: 'A'
 
 input_boolean:
-  webasto_next_boost_mode:
+  webasto_next_on:
     name: Webasto Next On
     icon: mdi:lightning-bolt
     initial: on
@@ -336,7 +336,7 @@ automation:
           hub: Webasto_Next
           address: 5004
           slave: 255
-          # Set the value of the register to the value of the input_number + 1, as the register is shifted by one
+          # Set the value of the register to the value of the input_number + 1, as the register value is shifted by one
           value:
             - "{{ (states.input_number.webasto_next_current_value_slider.state | int) + 1 }}"
       - service: modbus.write_register
@@ -345,12 +345,15 @@ automation:
           address: 6000  # Alive Register
           slave: 255
           value: [1]
+      - service: input_boolean.turn_{{ 'on' if (states.input_number.webasto_next_current_value_slider.state | int) >= 5 else 'off' }}
+        target:
+          entity_id: input_boolean.webasto_next_on
 
   - alias: Set Webasto Next On
     description: Toggle between off (4A) and low on (5A) charging mode
     trigger:
       - platform: state
-        entity_id: input_boolean.webasto_next_boost_mode
+        entity_id: input_boolean.webasto_next_on
     action:
       - service: input_number.set_value
         target:
