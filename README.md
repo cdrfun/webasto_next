@@ -44,7 +44,89 @@ This integration allows you to control and monitor your Webasto Next charging st
 
 - **Current Control Slider**: Adjust charging current from 4A to 16A
 - **On/Off Toggle**: Quick switch between off (4A) and charging (>=5A)
-- **Start/Stop Scripts**: Control charging sessions
+- **FastCharge Control**: Add a specific amount of kWh to charge (5-30 kWh in 1 kWh steps)
+- **FullCharge Mode**: Charge at maximum current until the vehicle is fully charged
+- **Start/Stop Scripts**: Control charging sessions manually
+
+## Charging Modes ⚡
+
+### FastCharge Mode
+
+Allows you to add a specific amount of energy (kWh) to your vehicle's battery:
+
+- Use the "FastCharge Increment" slider to set the desired amount (0-30 kWh)
+- The system will automatically:
+  - Calculate the target based on current meter reading
+  - Set charging current to maximum (16A)
+  - Stop charging when target is reached
+  - Reset settings after completion or when power drops to 0
+- Perfect for "I need X more kWh" scenarios
+
+### FullCharge Mode
+
+Designed for complete charging sessions:
+
+- Toggle "FullCharge" to start charging at maximum current (16A)
+- System will automatically:
+  - Clear any FastCharge settings
+  - Set maximum charging current (16A)
+  - Monitor charging power
+  - Detect when vehicle is fully charged (power drops to 0 for 1 minute)
+  - Stop charging and reset when complete
+- Ideal for "charge until full" scenarios
+
+### PV Excess Control
+
+- Setup [PV Excess Control](https://github.com/InventoCasa/ha-advanced-blueprints/tree/main/PV_Excess_Control) as described in the corresponding repo
+  - From this package, use the following sensors in the Blueprint:
+    - Appliance Entity: `input_boolean.webasto_next_on`
+    - Appliance SetCurrent entity: `input_number.webasto_next_current_value_slider`
+    - Appliance actual power sensor: `sensor.webasto_next_active_power_total`
+
+#### Managing Automation Conflicts
+
+The PV Excess Control must be deactivated when using FastCharge or FullCharge modes. Add this automation to your configuration:
+
+```yaml
+automation:
+  - alias: Manage PV Excess Control for Webasto Next
+    description: Disable PV Excess Control during FastCharge or FullCharge modes
+    trigger:
+      - platform: state
+        entity_id: input_boolean.webasto_next_full_charge
+      - platform: state
+        entity_id: input_number.webasto_next_fastcharge_increment
+    action:
+      - choose:
+          - conditions:
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: input_boolean.webasto_next_full_charge
+                    state: 'on'
+                  - condition: numeric_state
+                    entity_id: input_number.webasto_next_fastcharge_increment
+                    above: 0
+            sequence:
+              - service: automation.turn_off
+                entity_id: automation.pv_excess_control
+          - conditions:
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity_id: input_boolean.webasto_next_full_charge
+                    state: 'off'
+                  - condition: numeric_state
+                    entity_id: input_number.webasto_next_fastcharge_increment
+                    below: 1
+            sequence:
+              - service: automation.turn_on
+                entity_id: automation.pv_excess_control
+```
+
+This automation will:
+- Turn off PV Excess Control when FastCharge or FullCharge modes are active
+- Automatically restore PV Excess Control when both modes are inactive
 
 ## Sensors 📊
 

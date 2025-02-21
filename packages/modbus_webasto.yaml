@@ -1,73 +1,86 @@
 # Protocol requirements
-# The Webasto Unite charging station acts as a slave device in Modbus TCP/IP communication.
-# Charging station should be in the same network with the master device, or proper routing should be applied to provide communication between slave and master devices in different sub networks.
+# The Webasto Next charging station acts as a slave device in Modbus TCP/IP communication.
+# Charging station should be in the same network with the master device, or proper routing should be applied.
 # Each charging station should have a different IP address. There can only be one active Modbus master connection at any time.
-# Parameter Modbus TCP
-# Each Wallbox Unite must be given a unique IP.
-# Parameter                     Value 
-# IP-address:                   Any IP address; All Webasto Unite on the same subnet (e.g., xxx.xxx.xxx.xxx)
-# Modbus Port:                  502
-# Modbus Unit ID:               255
+# 
+# Parameter       Value 
+# IP-address:     Any IP address on the same subnet as your Home Assistant
+# Modbus Port:    502 (default)
+# Modbus Unit ID: 255
+
+# Main Modbus configuration
 modbus:
   - name: Webasto_Next
     type: tcp
     timeout: 5
     host: !secret webasto_modbus_host_ip
     port: !secret webasto_modbus_port
+
+    # Modbus sensor definitions
     sensors:
+      # State sensors
       - name: Webasto_Next_Charge_Point_State
-    # 0: "Available",
-    # 1: "Preparing",
-    # 2: "Charging",
-    # 3: "SuspendedEVSE",
-    # 4: "SuspendedEV",
-    # 5: "Finishing",
-    # 6: "Reserved",
-    # 7: "Unavailable",
-    # 8: "Faulted",
         unique_id: Webasto_Next_Charge_Point_State
         slave: 255
         input_type: input
         address: 1000
         data_type: uint16
-        
+        # States:
+        # 0: Available
+        # 1: Preparing
+        # 2: Charging
+        # 3: SuspendedEVSE
+        # 4: SuspendedEV
+        # 5: Finishing
+        # 6: Reserved
+        # 7: Unavailable
+        # 8: Faulted
+
       - name: Webasto_Next_Charging_State
-    # 0: Not Charging, State Ax, Bx, Dx or C1 1: Charging, state C2      
         unique_id: Webasto_Next_Charging_State
         slave: 255
         input_type: input
         address: 1001
         data_type: uint16
-        
+        # States:
+        # 0: Not Charging
+        # 1: Charging
+
       - name: Webasto_Next_Equipment_State
-    # 0: Initializing
-    # 1: Running
-    # 2: Fault
-    # 3: Disabled
-    # 4: Updating      
         unique_id: Webasto_Next_Equipment_State
         slave: 255
         input_type: input
         address: 1002
         data_type: uint16
+        # States:
+        # 0: Initializing
+        # 1: Running
+        # 2: Fault
+        # 3: Disabled
+        # 4: Updating
 
       - name: Webasto_Next_Cable_State
-    # 0: Cable not connected 1: Cable connected, vehicle not connected 2: Cable connected, vehicle connected 3: Cable connected, vehicle connected, cable locked
         unique_id: Webasto_Next_Cable_State
         slave: 255
         input_type: input
         address: 1004
         data_type: uint16
-        
+        # States:
+        # 0: Cable not connected
+        # 1: Cable connected, vehicle not connected
+        # 2: Cable connected, vehicle connected
+        # 3: Cable connected, vehicle connected, cable locked
+
       - name: Webasto_Next_EVSE_Fault_Code
-    # 0: No fault
-    # Other: Fault code      
         unique_id: Webasto_Next_EVSE_Fault_Code
         slave: 255
         input_type: input
         address: 1006
         data_type: uint16
-        
+        # States:
+        # 0: No fault
+        # Other: Fault code
+
       - name: Webasto_Next_Charging_Current_L1
         unique_id: Webasto_Next_Charging_Current_L1
         slave: 255
@@ -106,7 +119,7 @@ modbus:
         precision: 0
         state_class: measurement
         unit_of_measurement: A
-        
+
       - name: Webasto_Next_Active_Power_Total
         unique_id: Webasto_Next_Active_Power_Total
         slave: 255
@@ -116,7 +129,7 @@ modbus:
         device_class: power
         state_class: measurement
         unit_of_measurement: W
-        
+
       - name: Webasto_Next_Active_Power_L1
         unique_id: Webasto_Next_Active_Power_L1
         slave: 255
@@ -126,7 +139,7 @@ modbus:
         device_class: power
         state_class: measurement
         unit_of_measurement: W
-        
+
       - name: Webasto_Next_Active_Power_L2
         unique_id: Webasto_Next_Active_Power_L2
         slave: 255
@@ -136,7 +149,7 @@ modbus:
         device_class: power
         state_class: measurement
         unit_of_measurement: W
-        
+
       - name: Webasto_Next_Active_Power_L3
         unique_id: Webasto_Next_Active_Power_L3
         slave: 255
@@ -212,7 +225,6 @@ modbus:
 
       - name: Webasto_Next_Charged_Energy
         unique_id: Webasto_Next_Charged_Energy
-        # Sum of charged energy for the last session. During a session the value 0Wh is returned
         slave: 255
         input_type: input
         address: 1502
@@ -220,6 +232,7 @@ modbus:
         device_class: energy
         state_class: measurement
         unit_of_measurement: Wh
+        # Sum of charged energy for the last session. During a session the value 0Wh is returned
 
       - name: Webasto_Next_Session_Start_Time
         unique_id: Webasto_Next_Session_Start_Time
@@ -244,9 +257,8 @@ modbus:
         input_type: input
         address: 1512
         data_type: uint32
-        
+
       - name: Webasto_Next_Failsafe_Current
-      # R/W: Can be set in the Unite WebUI (Standard:6A)
         unique_id: Webasto_Next_Failsafe_Current
         slave: 255
         input_type: holding
@@ -255,16 +267,17 @@ modbus:
         device_class: current
         state_class: measurement
         unit_of_measurement: A
-      # Failsafe charging current during communication failure
+        # Failsafe charging current during communication failure
+        # R/W: Can be set in the Unite WebUI (Standard:6A)
 
       - name: Webasto_Next_Failsafe_Timeout
-      # R/W: No need to change (Standard: 20 seconds)
         unique_id: Webasto_Next_Failsafe_Timeout
         slave: 255
         input_type: holding
         address: 2002
         data_type: uint16
-      # Communication timeout for switching to Failsafe charging current. If the timeout has occurred and the TCP socket is still active, TCP socket restarts. If set, Failsafe period is timeout/2, otherwise 20 sec.
+        # Communication timeout for switching to Failsafe charging current. If the timeout has occurred and the TCP socket is still active, TCP socket restarts. If set, Failsafe period is timeout/2, otherwise 20 sec.
+        # R/W: No need to change (Standard: 20 seconds) - if changed make sure to adjust the keep-alive automation
 
       - name: Webasto_Next_Charge_Power
         unique_id: Webasto_Next_Charge_Power
@@ -276,9 +289,9 @@ modbus:
         state_class: measurement
         unit_of_measurement: W
 
+    # Switches configuration
     switches:
       - name: Webasto_Next_Alive_Register
-      # R/W
         unique_id: Webasto_Next_Alive_Register
         slave: 255
         write_type: holding
@@ -287,48 +300,78 @@ modbus:
         command_off: 0
         verify:
           delay: 5
-      # EMS (Master) writes 1 EVSE (Slave) writes 0 (EVSE checks this register at a period of (Failsafe Timeout)/2 for a value of 1, and sets it to 0.)
+        # Keep-alive mechanism:
+        # - Home Assistant (Master) writes 1
+        # - EVSE (Slave) writes 0
+        # - EVSE checks this register every (Failsafe Timeout/2) seconds
+        # - If not set to 1, falls back to failsafe current
 
+# Input controls
 input_number:
   webasto_next_current_value_slider:
     name: Webasto Next Current Value
-    initial: 5
-    min: 4
-    max: 16
+    min: 4    # Off state
+    max: 16   # Maximum charging current
     step: 1
     unit_of_measurement: 'A'
+  webasto_next_fastcharge_increment:
+    name: Webasto Next FastCharge Increment
+    min: 0    # Disabled
+    max: 30   # Maximum energy increment
+    step: 1
+    unit_of_measurement: 'kWh'
+  webasto_next_fastcharge_target:
+    name: Webasto Next FastCharge Target
+    min: 0    # No target
+    max: 999999
+    step: 0.001
+    unit_of_measurement: 'kWh'
 
+# Input boolean controls
 input_boolean:
   webasto_next_on:
     name: Webasto Next On
     icon: mdi:lightning-bolt
     initial: on
+  webasto_next_full_charge:
+    name: Webasto Next FullCharge
+    icon: mdi:battery-charging-100
+    initial: off
 
+# Recorder configuration
 recorder:
   exclude:
     entities:
       - automation.webasto_next_keep_alive
 
+# Automations
 automation:
+  # Keep-alive automation
   - alias: Webasto Next Keep Alive
     description: Webasto Next Keep Alive
+    id: webasto_next_keep_alive
     trigger:
       - platform: time_pattern
-        seconds: /10
-    condition: []
+        seconds: /10 # Half of the failsafe timeout
     action:
       - service: switch.turn_on
-        data: {}
         target:
           entity_id: switch.webasto_next_alive_register
     mode: single
-  
+
+  # Handles changes to the charging current slider
+  # - Adds +1 to value due to Modbus register offset
+  # - Updates alive register to prevent timeout
+  # - Turns wallbox on/off based on current (on >= 5A, off < 5A)
   - alias: Set Webasto Next Current Limit
     description: Set Webasto Next Current Limit
+    id: webasto_next_set_current_limit
     trigger:
       - platform: state
         entity_id:
           - input_number.webasto_next_current_value_slider
+        for:
+          seconds: 2
     condition: []
     action:
       - service: modbus.write_register
@@ -336,7 +379,7 @@ automation:
           hub: Webasto_Next
           address: 5004
           slave: 255
-          # Set the value of the register to the value of the input_number + 1, as the register value is shifted by one
+          # Set the value of the register to the value of the input_number + 1, as the register is shifted by one
           value:
             - "{{ (states.input_number.webasto_next_current_value_slider.state | int) + 1 }}"
       - service: modbus.write_register
@@ -345,15 +388,31 @@ automation:
           address: 6000  # Alive Register
           slave: 255
           value: [1]
-      - service: input_boolean.turn_{{ 'on' if (states.input_number.webasto_next_current_value_slider.state | int) >= 5 else 'off' }}
-        target:
-          entity_id: input_boolean.webasto_next_on
 
+  # Controls the basic on/off functionality of the wallbox
+  # Execution paths:
+  # 1. Turn off: Always allowed, sets current to 4A
+  # 2. Turn on: Only if current < 5A, sets current to 5A
+  # 3. No action: If turning on while current >= 5A (preserves FastCharge/FullCharge)
   - alias: Set Webasto Next On
     description: Toggle between off (4A) and low on (5A) charging mode
+    id: webasto_next_set_on
     trigger:
       - platform: state
         entity_id: input_boolean.webasto_next_on
+    condition:
+      - condition: or
+        conditions:
+        - condition: template
+          value_template: "{{ trigger.to_state.state == 'off' }}"
+        # Only execute if current setting is below 5A and new state is 'on'
+        - condition: and
+          conditions:
+            - condition: numeric_state
+              entity_id: input_number.webasto_next_current_value_slider
+              below: 5
+            - condition: template
+              value_template: "{{ trigger.to_state.state == 'on' }}"
     action:
       - service: input_number.set_value
         target:
@@ -361,6 +420,157 @@ automation:
         data:
           value: "{{ 5 if trigger.to_state.state == 'on' else 4 }}"
 
+  # Manages the FastCharge functionality with target-based charging
+  # Variables:
+  # - trigger_type: Identifies what triggered the automation
+  # - meter_reading: Current meter value
+  # - new_increment: Amount of kWh to add (only for increment changes)
+  #
+  # Execution paths:
+  # 1. Target reached or vehicle is fully charged:
+  #    - Resets target and increment to 0
+  #    - Cancels charging session
+  # 2. Increment changed:
+  #    - Calculates new target (current meter + increment)
+  #    - Sets charging current to maximum (16A)
+  #    - Ensures wallbox is turned on
+  - alias: Webasto Next FastCharge Target Control
+    description: Manage FastCharge target value
+    id: webasto_next_fastcharge_target_control
+    trigger:
+      - platform: state
+        entity_id: input_number.webasto_next_fastcharge_increment
+        id: increment_change
+      - platform: state
+        entity_id: sensor.webasto_next_meter_reading
+        id: meter_update
+      - platform: state
+        entity_id: sensor.webasto_next_active_power_total
+        id: power_check
+        for: 
+          minutes: 1
+    variables:
+      trigger_type: "{{ trigger.id }}"
+      meter_reading: "{{ states('sensor.webasto_next_meter_reading') | float }}"
+      old_increment: "{{ trigger.from_state.state | float if trigger.id == 'increment_change' else 0 }}"
+      new_increment: "{{ trigger.to_state.state | float if trigger.id == 'increment_change' else 0 }}"
+      current_target: "{{ states('input_number.webasto_next_fastcharge_target') | float }}"
+      target_reached: "{{ current_target > 0 and meter_reading >= current_target }}"
+      power_too_low: "{{ trigger.id == 'power_check' and (trigger.to_state.state | float) < 1 }}"
+      is_fastcharging: "{{ states('input_number.webasto_next_fastcharge_increment') | float > 0 }}"
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ (trigger_type == 'meter_update' and target_reached) or (power_too_low and is_fastcharging and current_target > 0) }}"
+            sequence:
+              - service: input_number.set_value
+                target:
+                  entity_id: 
+                    - input_number.webasto_next_fastcharge_target
+                    - input_number.webasto_next_fastcharge_increment
+                data:
+                  value: 0
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.webasto_next_on
+          
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger_type == 'increment_change' }}"
+            sequence:
+              - service: input_number.set_value
+                target:
+                  entity_id: input_number.webasto_next_fastcharge_target
+                data:
+                  value: >
+                    {% if current_target == 0 %}
+                      {{ meter_reading + new_increment }}
+                    {% else %}
+                      {{ current_target - old_increment + new_increment }}
+                    {% endif %}
+              - service: input_number.set_value
+                target:
+                  entity_id: input_number.webasto_next_current_value_slider
+                data:
+                  value: 16
+              - service: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.webasto_next_on
+
+  # Controls the FullCharge mode and automatic shutoff
+  # Variables:
+  # - trigger_type: Identifies what triggered the automation
+  # - is_on: True if fullcharge mode is being enabled
+  # - power_value: Current power consumption
+  # - is_charging: True if wallbox is on
+  # - is_fullcharge: True if in fullcharge mode
+  #
+  # Execution paths:
+  # 1. FullCharge enabled:
+  #    - Clears any FastCharge settings
+  #    - Sets maximum current (16A)
+  #    - Ensures wallbox is on
+  # 2. FullCharge disabled manually:
+  #    - Turns off the wallbox
+  # 3. Power drops to 0 while charging:
+  #    - Disables FullCharge mode
+  #    - Turns off the wallbox
+  - alias: Webasto Next FullCharge Control
+    description: Manage FullCharge mode and detect when vehicle is fully charged
+    id: webasto_next_full_charge_control
+    trigger:
+      - platform: state
+        entity_id: input_boolean.webasto_next_full_charge
+        id: fullcharge_toggle
+      - platform: state
+        entity_id: sensor.webasto_next_active_power_total
+        for:
+          minutes: 1
+        id: power_check
+    variables:
+      trigger_type: "{{ trigger.id }}"
+      is_on: "{{ trigger.to_state.state == 'on' if trigger.id == 'fullcharge_toggle' else false }}"
+      power_value: "{{ trigger.to_state.state | float if trigger.id == 'power_check' else 0 }}"
+      is_charging: "{{ states('input_boolean.webasto_next_on') == 'on' }}"
+      is_fullcharge: "{{ states('input_boolean.webasto_next_full_charge') == 'on' }}"
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger_type == 'fullcharge_toggle' and is_on }}"
+            sequence:
+              - service: input_number.set_value
+                target:
+                  entity_id:
+                    - input_number.webasto_next_fastcharge_target
+                    - input_number.webasto_next_fastcharge_increment
+                data:
+                  value: 0
+              - service: input_number.set_value
+                target:
+                  entity_id: input_number.webasto_next_current_value_slider
+                data:
+                  value: 16
+
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger_type == 'fullcharge_toggle' and not is_on }}"
+            sequence:
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.webasto_next_on
+
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger_type == 'power_check' and power_value < 1 and is_charging and is_fullcharge }}"
+            sequence:
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: 
+                    - input_boolean.webasto_next_full_charge
+
+# Scripts
 script:
   webasto_next_cancel_charging_session:
     alias: Webasto Next Cancel Charging Session
