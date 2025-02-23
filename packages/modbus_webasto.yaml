@@ -350,11 +350,11 @@ automation:
   - alias: Webasto Next Keep Alive
     description: Webasto Next Keep Alive
     id: webasto_next_keep_alive
-    trigger:
-      - platform: time_pattern
+    triggers:
+      - trigger: time_pattern
         seconds: /10 # Half of the failsafe timeout
-    action:
-      - service: switch.turn_on
+    actions:
+      - action: switch.turn_on
         target:
           entity_id: switch.webasto_next_alive_register
     mode: single
@@ -366,15 +366,15 @@ automation:
   - alias: Set Webasto Next Current Limit
     description: Set Webasto Next Current Limit
     id: webasto_next_set_current_limit
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id:
           - input_number.webasto_next_current_value_slider
         for:
           seconds: 2
     condition: []
-    action:
-      - service: modbus.write_register
+    actions:
+      - action: modbus.write_register
         data:
           hub: Webasto_Next
           address: 5004
@@ -382,7 +382,7 @@ automation:
           # Set the value of the register to the value of the input_number + 1, as the register is shifted by one
           value:
             - "{{ (states.input_number.webasto_next_current_value_slider.state | int) + 1 }}"
-      - service: modbus.write_register
+      - action: modbus.write_register
         data:
           hub: Webasto_Next
           address: 6000  # Alive Register
@@ -393,12 +393,12 @@ automation:
   # Execution paths:
   # 1. Turn off: Always allowed, sets current to 4A
   # 2. Turn on: Only if current < 5A, sets current to 5A
-  # 3. No action: If turning on while current >= 5A (preserves FastCharge/FullCharge)
+  # 3. No actions: If turning on while current >= 5A (preserves FastCharge/FullCharge)
   - alias: Set Webasto Next On
     description: Toggle between off (4A) and low on (5A) charging mode
     id: webasto_next_set_on
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.webasto_next_on
     condition:
       - condition: or
@@ -413,8 +413,8 @@ automation:
               below: 5
             - condition: template
               value_template: "{{ trigger.to_state.state == 'on' }}"
-    action:
-      - service: input_number.set_value
+    actions:
+      - action: input_number.set_value
         target:
           entity_id: input_number.webasto_next_current_value_slider
         data:
@@ -437,14 +437,14 @@ automation:
   - alias: Webasto Next FastCharge Target Control
     description: Manage FastCharge target value
     id: webasto_next_fastcharge_target_control
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_number.webasto_next_fastcharge_increment
         id: increment_change
-      - platform: state
+      - trigger: state
         entity_id: sensor.webasto_next_meter_reading
         id: meter_update
-      - platform: state
+      - trigger: state
         entity_id: sensor.webasto_next_active_power_total
         id: power_check
         for: 
@@ -458,20 +458,20 @@ automation:
       target_reached: "{{ current_target > 0 and meter_reading >= current_target }}"
       power_too_low: "{{ trigger.id == 'power_check' and (trigger.to_state.state | float) < 1 }}"
       is_fastcharging: "{{ states('input_number.webasto_next_fastcharge_increment') | float > 0 }}"
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: template
                 value_template: "{{ (trigger_type == 'meter_update' and target_reached) or (power_too_low and is_fastcharging and current_target > 0) }}"
             sequence:
-              - service: input_number.set_value
+              - action: input_number.set_value
                 target:
                   entity_id: 
                     - input_number.webasto_next_fastcharge_target
                     - input_number.webasto_next_fastcharge_increment
                 data:
                   value: 0
-              - service: input_boolean.turn_off
+              - action: input_boolean.turn_off
                 target:
                   entity_id: input_boolean.webasto_next_on
           
@@ -479,7 +479,7 @@ automation:
               - condition: template
                 value_template: "{{ trigger_type == 'increment_change' }}"
             sequence:
-              - service: input_number.set_value
+              - action: input_number.set_value
                 target:
                   entity_id: input_number.webasto_next_fastcharge_target
                 data:
@@ -489,12 +489,12 @@ automation:
                     {% else %}
                       {{ current_target - old_increment + new_increment }}
                     {% endif %}
-              - service: input_number.set_value
+              - action: input_number.set_value
                 target:
                   entity_id: input_number.webasto_next_current_value_slider
                 data:
                   value: 16
-              - service: input_boolean.turn_on
+              - action: input_boolean.turn_on
                 target:
                   entity_id: input_boolean.webasto_next_on
 
@@ -519,11 +519,11 @@ automation:
   - alias: Webasto Next FullCharge Control
     description: Manage FullCharge mode and detect when vehicle is fully charged
     id: webasto_next_full_charge_control
-    trigger:
-      - platform: state
+    triggers:
+      - trigger: state
         entity_id: input_boolean.webasto_next_full_charge
         id: fullcharge_toggle
-      - platform: state
+      - trigger: state
         entity_id: sensor.webasto_next_active_power_total
         for:
           minutes: 1
@@ -534,20 +534,20 @@ automation:
       power_value: "{{ trigger.to_state.state | float if trigger.id == 'power_check' else 0 }}"
       is_charging: "{{ states('input_boolean.webasto_next_on') == 'on' }}"
       is_fullcharge: "{{ states('input_boolean.webasto_next_full_charge') == 'on' }}"
-    action:
+    actions:
       - choose:
           - conditions:
               - condition: template
                 value_template: "{{ trigger_type == 'fullcharge_toggle' and is_on }}"
             sequence:
-              - service: input_number.set_value
+              - action: input_number.set_value
                 target:
                   entity_id:
                     - input_number.webasto_next_fastcharge_target
                     - input_number.webasto_next_fastcharge_increment
                 data:
                   value: 0
-              - service: input_number.set_value
+              - action: input_number.set_value
                 target:
                   entity_id: input_number.webasto_next_current_value_slider
                 data:
@@ -557,7 +557,7 @@ automation:
               - condition: template
                 value_template: "{{ trigger_type == 'fullcharge_toggle' and not is_on }}"
             sequence:
-              - service: input_boolean.turn_off
+              - action: input_boolean.turn_off
                 target:
                   entity_id: input_boolean.webasto_next_on
 
@@ -565,7 +565,7 @@ automation:
               - condition: template
                 value_template: "{{ trigger_type == 'power_check' and power_value < 1 and is_charging and is_fullcharge }}"
             sequence:
-              - service: input_boolean.turn_off
+              - action: input_boolean.turn_off
                 target:
                   entity_id: 
                     - input_boolean.webasto_next_full_charge
@@ -575,20 +575,20 @@ script:
   webasto_next_cancel_charging_session:
     alias: Webasto Next Cancel Charging Session
     sequence:
-      - service: modbus.write_register
+      - action: modbus.write_register
         data:
           hub: Webasto_Next
           address: 6000
           slave: 255
           value: [2]
       - delay: '00:00:05'
-      - service: modbus.write_register
+      - action: modbus.write_register
         data:
           hub: Webasto_Next
           address: 5006
           slave: 255
           value: [0]
-      - service: modbus.write_register
+      - action: modbus.write_register
         data:
           hub: Webasto_Next
           address: 6000  # Alive Register
@@ -597,13 +597,13 @@ script:
   webasto_next_start_charging_session:
     alias: Webasto Next Start Charging Session
     sequence:
-      - service: modbus.write_register
+      - action: modbus.write_register
         data:
           hub: Webasto_Next
           address: 5006
           slave: 255
           value: [1]
-      - service: modbus.write_register
+      - action: modbus.write_register
         data:
           hub: Webasto_Next
           address: 6000  # Alive Register
